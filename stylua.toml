@@ -1,0 +1,2 @@
+syntax = "Luau"
+block_newline_gaps = "Preserve"

@@ -1,0 +1,12 @@
+[package]
+name = "bajsucks/paralib"
+description = "Simplest parallelization library."
+license = "MIT"
+authors = ["baj"]
+repository = "https://github.com/bajsucks/paralib"
+version = "0.1.0"
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"
+
+[dependencies]
+signalplus = "alexanderlindholt/signalplus@*"
