@@ -2,8 +2,12 @@ local Actor = script:GetActor()
 if not Actor then
 	return
 end
-Actor:BindToMessageParallel("init", function(BootModule, ...)
+local Estabilished = script.Parent:FindFirstChildWhichIsA("BindableEvent")
+Actor:BindToMessage("init", function(BootModule, ...)
 	local Boot = require(BootModule)
 	Boot(...)
+	Estabilished:Fire()
 end)
-Actor:SendMessage("estabilished")
+if Estabilished then
+	Estabilished:Fire()
+end

@@ -2,7 +2,7 @@
 --[[
 	Paralib - Simplest parallelization library.
 	Made by baj
-	v 0.1.0
+	v 0.1.1
 	License: MIT
 ]]
 local RunService = game:GetService("RunService")
@@ -42,9 +42,10 @@ local function Event(): BindableEvent
 	return Instance.new("BindableEvent")
 end
 --[[
-	Creates a new thread pool.
+	Creates a new thread pool. This will yield a bit depending on thread count.
 	@param Threads How many threads the pool should contain
 	@param Module ModuleScript that will be required in the threads
+	@yields
 ]]
 function Paralib.new(Threads: number, Module: ModuleScript): Pool
 	local self = setmetatable({}, Pool)
@@ -73,20 +74,14 @@ end
 function Pool._MakeActor(self: Pool, Module: ModuleScript, ActorId: number, Bootstrap: Script)
 	local Actor = Instance.new("Actor")
 	Actor.Parent = ActorFolder
-	local Estabilished = signalplus()
-	local Prior = false
-	local con = Actor:BindToMessage("estabilished", function()
-		Estabilished:Fire()
-		Prior = true
-	end)
+	local Estabilished = Event()
+	Estabilished.Parent = Actor
 	Bootstrap = Bootstrap:Clone()
 	Bootstrap.Parent = Actor
-	if not Prior then
-		Estabilished:Wait()
-	end
-	con:Disconnect()
-	Estabilished:Destroy()
+	Estabilished.Event:Wait()
 	Actor:SendMessage("init", BootModule, self._Work, #self._Actors, Module, ActorId)
+	Estabilished.Event:Wait()
+	Estabilished:Destroy()
 	return Actor
 end
 
