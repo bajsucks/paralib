@@ -5,7 +5,7 @@ Simplest parallelization library.
 add `paralib = bajsucks/paralib@*` to your wally.toml to install
 
 ## Usage
-`paralib.new(n, Module)` - Create a pool of `n` actors with the module as content
+`paralib.new(n, Module, Debug?)` - Create a pool of `n` actors with the module as content. Set `Debug` to `true` for extended error logging and handling.
 
 `Pool:Invoke(n, FnStr, ...)` - Run `n` jobs of the function `Module[FnStr]`. Yields until the jobs finish and returns their results as a normal table.
 

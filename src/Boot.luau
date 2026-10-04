@@ -29,14 +29,22 @@ local function GetRange(Pointer: number, Jobs: number, ActorId: number, ActorCou
 
 	return Start, Start + ActorJobs - 1
 end
-return function(Bindable: BindableEvent, n: number, Module: ModuleScript, ActorId: number)
+return function(Bindable: BindableEvent, n: number, Module: ModuleScript, ActorId: number, InitErrs: SharedTable)
 	local loaded, m = pcall(require, Module)
 	if not loaded then
-		warn(`Failed to require thread module: {m}`)
-		m = nil
+		InitErrs[ActorId] = tostring(m)
 	end
 	Bindable.Event:ConnectParallel(
-		function(Completed: BindableEvent?, Results: SharedTable, Pointer: number, Jobs: number, Fn: string, ...: any)
+		function(
+			Completed: BindableEvent?,
+			Results: SharedTable,
+			Errors: SharedTable?,
+			DispatchId: number,
+			Pointer: number,
+			Jobs: number,
+			Fn: string,
+			...
+		)
 			local function Stop()
 				if Completed then
 					Completed:Fire()
@@ -46,20 +54,32 @@ return function(Bindable: BindableEvent, n: number, Module: ModuleScript, ActorI
 				Stop()
 				return
 			end
-			if not Fn or not m or not m[Fn] then
-				warn(`Tried to call a missing thread function; Fn = {Fn}`)
-				Stop()
-				return
-			end
 			local iStart, iEnd = GetRange(Pointer, Jobs, ActorId, n)
 			if iStart > iEnd then
 				Stop()
 				return
 			end
-			local succeeded, err = pcall(m[Fn], iStart, iEnd, Results, ...)
+			local function Error(message: string)
+				if Errors then
+					Errors[ActorId] =
+						`failed: {message}\ndispatch={DispatchId} actor={ActorId} function={Fn} range={iStart}-{iEnd}`
+				end
+			end
+			if not m or typeof(Fn) ~= "string" or not m[Fn] then
+				Error("Invalid worker function")
+				Stop()
+				return
+			end
+			local args = table.pack(...)
+			local function RunWorker()
+				m[Fn](iStart, iEnd, Results, table.unpack(args, 1, args.n))
+			end
+			local success, err = xpcall(RunWorker, function(message)
+				return debug.traceback(tostring(message), 2)
+			end)
 			task.synchronize()
-			if not succeeded then
-				warn(`One of actors failed with error:\n{err}`)
+			if not success then
+				Error(err)
 			end
 			Stop()
 		end
