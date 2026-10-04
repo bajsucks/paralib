@@ -12,6 +12,8 @@ Pool.__index = Pool
 
 local signalplus = require(script.Packages.signalplus)
 
+local BootModule = script.Boot
+
 export type Pool = {
 	Invoke: (self: Pool, Jobs: number, Fn: string, ...any) -> { any },
 	Fire: (self: Pool, Jobs: number, Fn: string, ...any) -> (),
@@ -58,12 +60,9 @@ function Paralib.new(Threads: number, Module: ModuleScript): Pool
 	self._Pending = 0
 	self._Idle = signalplus()
 	self._Destroyed = false
-	local Context = RunService:IsClient() and Enum.RunContext.Client or Enum.RunContext.Server
-	if script.Bootstrap.RunContext ~= Context then
-		script.Bootstrap.RunContext = Context
-	end
+	local Bootstrap = RunService:IsClient() and script.ClientBootstrap or script.ServerBootstrap
 	for i = 1, Threads do
-		self._Actors[i] = self:_MakeActor(Module, i)
+		self._Actors[i] = self:_MakeActor(Module, i, Bootstrap)
 	end
 	return self
 end
@@ -71,7 +70,7 @@ end
 	@private
 	Creates and binds a worker actor
 ]]
-function Pool._MakeActor(self: Pool, Module: ModuleScript, ActorId: number)
+function Pool._MakeActor(self: Pool, Module: ModuleScript, ActorId: number, Bootstrap: Script)
 	local Actor = Instance.new("Actor")
 	Actor.Parent = ActorFolder
 	local Estabilished = signalplus()
@@ -80,14 +79,14 @@ function Pool._MakeActor(self: Pool, Module: ModuleScript, ActorId: number)
 		Estabilished:Fire()
 		Prior = true
 	end)
-	local Bootstrap = script.Bootstrap:Clone()
+	Bootstrap = Bootstrap:Clone()
 	Bootstrap.Parent = Actor
 	if not Prior then
 		Estabilished:Wait()
 	end
 	con:Disconnect()
 	Estabilished:Destroy()
-	Actor:SendMessage("init", self._Work, #self._Actors, Module, ActorId)
+	Actor:SendMessage("init", BootModule, self._Work, #self._Actors, Module, ActorId)
 	return Actor
 end
 

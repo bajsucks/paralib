@@ -1,8 +1,3 @@
-local Actor = script:GetActor()
-if not Actor then
-	return
-end
-
 --[[
 	Returns a range of jobs the actor has to take over
 	@param Pointer Amount of jobs completed prior to this batch
@@ -34,8 +29,7 @@ local function GetRange(Pointer: number, Jobs: number, ActorId: number, ActorCou
 
 	return Start, Start + ActorJobs - 1
 end
-
-local function init(Bindable: BindableEvent, n: number, Module: ModuleScript, ActorId: number)
+return function(Bindable: BindableEvent, n: number, Module: ModuleScript, ActorId: number)
 	local loaded, m = pcall(require, Module)
 	if not loaded then
 		warn(`Failed to require thread module: {m}`)
@@ -71,5 +65,3 @@ local function init(Bindable: BindableEvent, n: number, Module: ModuleScript, Ac
 		end
 	)
 end
-Actor:BindToMessageParallel("init", init)
-Actor:SendMessage("estabilished")
