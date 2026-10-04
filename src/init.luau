@@ -2,7 +2,7 @@
 --[[
 	Paralib - Simplest parallelization library.
 	Made by baj
-	v 0.1.2
+	v 0.1.3
 	License: MIT
 ]]
 local RunService = game:GetService("RunService")
@@ -22,7 +22,8 @@ export type Pool = {
 --export type Pool = typeof(Paralib.new())
 
 const ActorFolder = Instance.new("Folder")
-ActorFolder.Parent = script
+ActorFolder.Name = "ParalibActors"
+ActorFolder.Parent = RunService:IsClient() and script or game:GetService("ServerScriptService")
 
 local ID = 0
 
