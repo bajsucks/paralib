@@ -10,7 +10,7 @@ const Paralib = {}
 const Pool = {}
 Pool.__index = Pool
 
-local signalplus = require(script.Packages.signalplus)
+local signalplus = require(script.Parent.signalplus)
 
 local BootModule = script.Boot
 
